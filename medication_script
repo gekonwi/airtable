@@ -1,0 +1,50 @@
+let INTAKE_TIME = 'Time';
+let INTAKE_MEDICATION = 'Medication';
+let INTAKE_COUNT = 'Count';
+let intakeTable = base.getTable("Intake");
+let recentIntakeView = intakeTable.getView("Last 24h");
+let intakeQuery = await recentIntakeView.selectRecordsAsync({
+    fields: [INTAKE_TIME, INTAKE_MEDICATION, INTAKE_COUNT]
+});
+
+let MEDICATION_DOSAGE = 'Dosage';
+let medicationTable = base.getTable("Medication");
+let medicationQuery = await medicationTable.selectRecordsAsync({
+    fields: [MEDICATION_DOSAGE]
+});
+
+let DOSAGE_INGREDIENT = 'Ingredient';
+let DOSAGE_MG = 'mg';
+let dosageTable = base.getTable("Dosage");
+let dosageQuery = await dosageTable.selectRecordsAsync({
+    fields: [DOSAGE_INGREDIENT, DOSAGE_MG]
+});
+
+let INGREDIENT_NAME = 'Name';
+let INGREDIENT_TOTAL_INTAKE = 'mg over last 24h';
+let INGREDIENT_LAST_INTAKE = 'last time taken';
+let ingredientsTable = base.getTable("Ingredient");
+let ingredientsView = ingredientsTable.getView("Grid view");
+let ingredientsQuery = await ingredientsView.selectRecordsAsync({
+    fields: [INGREDIENT_NAME, INGREDIENT_TOTAL_INTAKE, INGREDIENT_LAST_INTAKE]
+});
+
+for (let ingredientRecord of ingredientsQuery.records) {
+    let totalIntake = 0;
+    let lastIntake = 0;
+
+    for (let intakeRecord of intakeQuery.records) {
+        // There is only one medication per intake record.
+        let medicationId = intakeRecord.getCellValue(INTAKE_MEDICATION)[0].id;
+        let medicationRecord = medicationQuery.getRecord(medicationId);
+        let dosageRecords = medicationRecord.getCellValue(MEDICATION_DOSAGE).map((dosage) => 
+            dosageQuery.getRecord(dosage.id)
+        );
+        for (let dosageRecord of dosageRecords) {
+            if (dosageRecord.getCellValue(DOSAGE_INGREDIENT)[0].id == ingredientRecord.id) {
+                totalIntake += intakeRecord.getCellValue(INTAKE_COUNT) * dosageRecord.getCellValue(DOSAGE_MG);
+
+            }
+        }
+    }
+}
