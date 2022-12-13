@@ -23,9 +23,9 @@ let dosageQuery = await dosageTable.selectRecordsAsync({
 let INGREDIENT_NAME = 'Name';
 let INGREDIENT_TOTAL_INTAKE = 'mg over last 24h';
 let INGREDIENT_LAST_INTAKE = 'last time taken';
-let ingredientsTable = base.getTable("Ingredient");
-let ingredientsView = ingredientsTable.getView("Grid view");
-let ingredientsQuery = await ingredientsView.selectRecordsAsync({
+let ingredientTable = base.getTable("Ingredient");
+let ingredientView = ingredientTable.getView("Grid view");
+let ingredientsQuery = await ingredientView.selectRecordsAsync({
     fields: [INGREDIENT_NAME, INGREDIENT_TOTAL_INTAKE, INGREDIENT_LAST_INTAKE]
 });
 
@@ -43,8 +43,14 @@ for (let ingredientRecord of ingredientsQuery.records) {
         for (let dosageRecord of dosageRecords) {
             if (dosageRecord.getCellValue(DOSAGE_INGREDIENT)[0].id == ingredientRecord.id) {
                 totalIntake += intakeRecord.getCellValue(INTAKE_COUNT) * dosageRecord.getCellValue(DOSAGE_MG);
-
+                if (intakeRecord.getCellValue(INTAKE_TIME) > lastIntake) {
+                    lastIntake = intakeRecord.getCellValue(INTAKE_TIME);
+                }
             }
         }
     }
+    await ingredientTable.updateRecordAsync(ingredientRecord, {
+        [INGREDIENT_TOTAL_INTAKE]: totalIntake,
+        [INGREDIENT_LAST_INTAKE]: lastIntake,
+    });
 }
