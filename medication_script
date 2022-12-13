@@ -31,7 +31,7 @@ let ingredientsQuery = await ingredientView.selectRecordsAsync({
 
 for (let ingredientRecord of ingredientsQuery.records) {
     let totalIntake = 0;
-    let lastIntake = 0;
+    let lastIntake = new Date(0);
 
     for (let intakeRecord of intakeQuery.records) {
         // There is only one medication per intake record.
@@ -43,15 +43,16 @@ for (let ingredientRecord of ingredientsQuery.records) {
         for (let dosageRecord of dosageRecords) {
             if (dosageRecord.getCellValue(DOSAGE_INGREDIENT)[0].id == ingredientRecord.id) {
                 totalIntake += intakeRecord.getCellValue(INTAKE_COUNT) * dosageRecord.getCellValue(DOSAGE_MG);
-                if (intakeRecord.getCellValue(INTAKE_TIME) > lastIntake) {
-                    lastIntake = intakeRecord.getCellValue(INTAKE_TIME);
+                let intakeTime = new Date(intakeRecord.getCellValue(INTAKE_TIME));
+                if (intakeTime > lastIntake) {
+                    lastIntake = intakeTime;
                 }
             }
         }
     }
     await ingredientTable.updateRecordAsync(ingredientRecord, {
         [INGREDIENT_TOTAL_INTAKE]: totalIntake,
-        // [INGREDIENT_LAST_INTAKE]: lastIntake,
+        [INGREDIENT_LAST_INTAKE]: lastIntake.toISOString(),
     });
 }
 
