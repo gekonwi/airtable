@@ -51,6 +51,7 @@ for (let ingredientRecord of ingredientsQuery.records) {
     }
     await ingredientTable.updateRecordAsync(ingredientRecord, {
         [INGREDIENT_TOTAL_INTAKE]: totalIntake,
-        [INGREDIENT_LAST_INTAKE]: lastIntake,
+        // [INGREDIENT_LAST_INTAKE]: lastIntake,
     });
 }
+
